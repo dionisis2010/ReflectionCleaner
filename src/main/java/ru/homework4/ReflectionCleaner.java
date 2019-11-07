@@ -19,13 +19,13 @@ public class ReflectionCleaner {
      * @throws IllegalAccessException бросается если в полученнной мапе нет указзых ключей
      */
     public void cleanup(Object object, Set<String> fieldsToCleanup, Set<String> fieldsToOutput) throws IllegalAccessException {
-        Field[] fields = object.getClass().getFields();
 
         if (isMap(object)) {
             final Map map = (Map) object;
             removeEntries(map, fieldsToCleanup);
             printEntries(map, fieldsToOutput);
         } else {
+            Field[] fields = object.getClass().getFields();
             cleanFields(object, fieldsToCleanup, fields);
             printFields(object, fieldsToOutput, fields);
         }
