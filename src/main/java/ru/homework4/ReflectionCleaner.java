@@ -1,8 +1,9 @@
 package ru.homework4;
 
 import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ReflectionCleaner {
 
@@ -22,13 +23,24 @@ public class ReflectionCleaner {
 
         if (isMap(object)) {
             final Map map = (Map) object;
-            removeEntries(map, fieldsToCleanup);
             printEntries(map, fieldsToOutput);
+            removeEntries(map, fieldsToCleanup);
         } else {
-            Field[] fields = object.getClass().getFields();
-            cleanFields(object, fieldsToCleanup, fields);
+            List<Field> fields = getAllFields(object);
             printFields(object, fieldsToOutput, fields);
+            cleanFields(object, fieldsToCleanup, fields);
         }
+    }
+
+    private List<Field> getAllFields(Object object) {
+        List<Field> fieldList = Arrays.stream(object.getClass().getFields())
+                .collect(Collectors.toList());
+        Arrays.stream(object.getClass().getDeclaredFields())
+                .forEach(x -> {
+                    x.setAccessible(true);
+                    fieldList.add(x);
+                });
+        return fieldList;
     }
 
     private void printEntries(Map map, Set<String> fieldsToOutput) {
@@ -51,7 +63,7 @@ public class ReflectionCleaner {
         }
     }
 
-    private void printFields(Object object, Set<String> fieldsToOutput, Field[] fields) throws IllegalAccessException {
+    private void printFields(Object object, Set<String> fieldsToOutput, List<Field> fields) throws IllegalAccessException {
         for (Field field : fields) {
             if (fieldsToOutput.contains(field.getName())) {
                 printField(object, field);
@@ -94,7 +106,7 @@ public class ReflectionCleaner {
         }
     }
 
-    private void cleanFields(Object object, Set<String> fieldsToCleanup, Field[] fields) throws IllegalAccessException {
+    private void cleanFields(Object object, Set<String> fieldsToCleanup, List<Field> fields) throws IllegalAccessException {
         for (Field field : fields) {
             if (fieldsToCleanup.contains(field.getName())) {
                 cleanField(object, field);
