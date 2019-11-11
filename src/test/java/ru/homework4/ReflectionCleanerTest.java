@@ -1,82 +1,91 @@
 package ru.homework4;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
-class ReflectionCleanerTest {
+public class ReflectionCleanerTest {
 
-    Map map = new HashMap();
-    C c;
-    B b;
-    Set<String> fieldsToCleanup;
-    Set<String> fieldsToOutput;
-    ReflectionCleaner cleaner;
 
-    @BeforeEach
-    public void init() {
-        map = new HashMap();
-        map.put("fieldB2", "value1");
-        map.put("fieldB3", "value4");
-        map.put("fieldC2", "value2");
-        map.put("fieldA2", "value3");
-        map.put("fieldC4", "value5");
-        map.put("fieldA1", "value6");
-        map.put("fieldB1", "value7");
-        map.put("fieldC3", "value8");
-        map.put("fieldC1", "value9");
-        map.put("fieldB4", "value10");
-        map.put("ke1", "value11");
-        map.put("key2", "value12");
+    @Test
+    public void cleanupMap() throws IllegalAccessException {
+        Map<String, Object> map = new HashMap<>();
+        map.put("age", 10);
+        map.put("parentName", "nameA");
+        map.put("childName", "nameB");
+        map.put("height", 15);
+        map.put("privateParentField", 10.5);
+        map.put("booleanField", true);
+        map.put("intField", 100);
+        map.put("key1", 1);
+        map.put("key2", 3);
+        map.put("key3", 4);
 
-        c = new C();
-        b = new B();
+        Set<String> fieldsToCleanup = new HashSet<>();
+        fieldsToCleanup.add("booleanField");
+        fieldsToCleanup.add("parentName");
+        fieldsToCleanup.add("height");
+        Set<String> fieldsToOutput = new HashSet<>();
+        fieldsToOutput.add("intField");
+        fieldsToOutput.add("age");
+        fieldsToOutput.add("childName");
 
-        fieldsToCleanup = new HashSet<>();
-        fieldsToCleanup.add("fieldB2");
-        fieldsToCleanup.add("fieldC2");
-        fieldsToCleanup.add("fieldA2");
+        ReflectionCleaner cleaner = new ReflectionCleaner();
 
-        fieldsToOutput = new HashSet<>();
-        fieldsToOutput.add("fieldB3");
-        fieldsToOutput.add("fieldC4");
-        fieldsToOutput.add("fieldB4");
+        cleaner.cleanup(map, fieldsToCleanup, fieldsToOutput);
+        assertEquals(10, map.get("age"));
+        assertEquals(null, map.get("booleanField"));
+        assertEquals(100, map.get("intField"));
+        assertEquals(null, map.get("height"));
 
-        cleaner = new ReflectionCleaner();
     }
 
-    @org.junit.jupiter.api.Test
-    void cleanup() throws IllegalAccessException {
-        cleaner.cleanup(map, fieldsToCleanup, fieldsToOutput);
-        assertEquals(map.get("fieldB2"), null);
-        assertEquals(map.get("fieldB3"), "value4");
+    @Test
+    public void cleanup() throws IllegalAccessException {
+        B b = new B();
+        Set<String> fieldsToCleanup = new HashSet<>();
+        fieldsToCleanup.add("booleanField");
+        fieldsToCleanup.add("parentName");
+        fieldsToCleanup.add("height");
+        Set<String> fieldsToOutput = new HashSet<>();
+        fieldsToOutput.add("intField");
+        fieldsToOutput.add("age");
+        fieldsToOutput.add("childName");
 
-        cleaner.cleanup(c, fieldsToCleanup, fieldsToOutput);
-        assertEquals(c.fieldC2, 0);
-        assertEquals(c.fieldC4, "fieldC4 value");
+        ReflectionCleaner cleaner = new ReflectionCleaner();
+        cleaner.cleanup(b, fieldsToCleanup, fieldsToOutput);
+
+        assertEquals(100, b.getIntField());
+        assertEquals(10, b.age);
+        assertEquals("nameB", b.childName);
+        assertEquals(null, b.parentName);
+        assertEquals(null, b.height);
     }
 }
 
 class A {
-    public int fieldA1 = 10;
-    public String fieldA2 = "String field A2";
+    public int age = 10;
+    public String parentName = "nameA";
+    private double privateParentField = 10.5;
 }
 
 class B extends A {
-    public boolean fieldB1 = true;
-    public Boolean fieldB2 = false;
-    public Double fieldB3 = 15.15;
-    public Object fieldB4 = new Object();
-}
+    public String childName = "nameB";
+    public Integer height = 15;
+    private boolean booleanField = true;
+    private int intField = 100;
 
-class C extends B {
-    public Integer fieldC1 = 500;
-    public byte fieldC2 = 25;
-    public char fieldC3 = '1';
-    public String fieldC4 = "fieldC4 value";
+    public boolean getBooleanField() {
+        return booleanField;
+    }
+
+    public int getIntField() {
+        return intField;
+    }
 }

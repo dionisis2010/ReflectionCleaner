@@ -26,19 +26,19 @@ public class ReflectionCleaner {
             printEntries(map, fieldsToOutput);
             removeEntries(map, fieldsToCleanup);
         } else {
-            List<Field> fields = getAllFields(object);
+            final List<Field> fields = getAllFields(object);
             printFields(object, fieldsToOutput, fields);
             cleanFields(object, fieldsToCleanup, fields);
         }
     }
 
     private List<Field> getAllFields(Object object) {
-        List<Field> fieldList = Arrays.stream(object.getClass().getFields())
+        final List<Field> fieldList = Arrays.stream(object.getClass().getFields())
                 .collect(Collectors.toList());
         Arrays.stream(object.getClass().getDeclaredFields())
-                .forEach(x -> {
-                    x.setAccessible(true);
-                    fieldList.add(x);
+                .forEach(field -> {
+                    field.setAccessible(true);
+                    fieldList.add(field);
                 });
         return fieldList;
     }
@@ -145,15 +145,7 @@ public class ReflectionCleaner {
                     throw new EverythingIsBadException("это не должно выполняться никогда");
             }
         } else {
-            if (isBoolean(field)) {
-                field.set(object, false);
-            } else if (isNumber(field)) {
-                field.set(object, 0);
-            } else if (isCharacter(field)) {
-                field.set(object, '\u0000');
-            } else {
                 field.set(object, null);
-            }
         }
     }
 
@@ -165,23 +157,6 @@ public class ReflectionCleaner {
             }
         }
         return false;
-    }
-
-    private boolean isNumber(Field field) {
-        return field.getType().equals(Integer.class) ||
-                field.getType().equals(Short.class) ||
-                field.getType().equals(Byte.class) ||
-                field.getType().equals(Long.class) ||
-                field.getType().equals(Double.class) ||
-                field.getType().equals(Float.class);
-    }
-
-    private boolean isBoolean(Field field) {
-        return field.getType().equals(Boolean.class);
-    }
-
-    private boolean isCharacter(Field field) {
-        return field.getType().equals(Character.class);
     }
 }
 
